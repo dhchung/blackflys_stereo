@@ -27,8 +27,8 @@ int main(int argc, char ** argv) {
     // while(1){
 
         std::vector<cv::Mat> acquired_image =  cam.acquire_image();
-        std::cout<<acquired_image[0].rows<<" by "<<acquired_image[0].cols<<std::endl;
-
+        // std::cout<<acquired_image[0].rows<<" by "<<acquired_image[0].cols<<std::endl;
+        // std::cout<<acquired_image[1].rows<<" by "<<acquired_image[1].cols<<std::endl;
 
         sensor_msgs::ImagePtr msg_1 = cv_bridge::CvImage(std_msgs::Header(), "bgr8", acquired_image[0]).toImageMsg();
         sensor_msgs::ImagePtr msg_2 = cv_bridge::CvImage(std_msgs::Header(), "bgr8", acquired_image[1]).toImageMsg();

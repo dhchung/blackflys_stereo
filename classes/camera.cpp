@@ -2,7 +2,6 @@
 
 
 Camera::Camera(){
-    std::cout<<"WTF"<<std::endl;
     system = Spinnaker::System::GetInstance();
 
     cam_1_serial = "20515474"; // Primary Camera
@@ -111,18 +110,11 @@ void Camera::set_camera(){
 
         ptrHandlingModeEntry_1 = ptrHandlingMode_1->GetEntryByName("NewestFirst");
         ptrHandlingMode_1->SetIntValue(ptrHandlingModeEntry_1->GetValue());
-        std::cout << std::endl
-                << std::endl
-                << "Buffer Handling Mode has been set to " << ptrHandlingModeEntry_1->GetDisplayName() << std::endl;
+        std::cout << "Buffer Handling Mode has been set to " << ptrHandlingModeEntry_1->GetDisplayName() << std::endl;
 
         ptrHandlingModeEntry_2 = ptrHandlingMode_2->GetEntryByName("NewestFirst");
         ptrHandlingMode_2->SetIntValue(ptrHandlingModeEntry_2->GetValue());
-        std::cout << std::endl
-                << std::endl
-                << "Buffer Handling Mode has been set to " << ptrHandlingModeEntry_2->GetDisplayName() << std::endl;
-
-
-
+        std::cout << "Buffer Handling Mode has been set to " << ptrHandlingModeEntry_2->GetDisplayName() << std::endl;
 
         cam_2->BeginAcquisition();
         cam_1->BeginAcquisition();
@@ -160,25 +152,33 @@ std::vector<cv::Mat> Camera::acquire_image(){
     const size_t height_1 = img1->GetHeight();
     Spinnaker::ImagePtr convertedImage_1 = img1->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::BILINEAR);
     cv::Mat imgMat_1 = cv::Mat(cv::Size(width_1, height_1), CV_8UC3, convertedImage_1->GetData());
-    cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols/1, imgMat_1.rows/1));
 
 
     const size_t width_2 = img2->GetWidth();
     const size_t height_2 = img2->GetHeight();
     Spinnaker::ImagePtr convertedImage_2 = img2->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::BILINEAR);
     cv::Mat imgMat_2 = cv::Mat(cv::Size(width_2, height_2), CV_8UC3, convertedImage_2->GetData());
-    cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols/2, imgMat_2.rows/2));
+
+
+    // I don't know what the f**k is going on, but it doesn't work if i don't do this
+    // ******* Meaningless Resize ******* //
+    float ratio = 0.5;
+    cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols/ratio, imgMat_1.rows/ratio));
+    cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols*ratio, imgMat_1.rows*ratio));
+    cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols/ratio, imgMat_2.rows/ratio));
+    cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols*ratio, imgMat_2.rows*ratio));
+    // ********************************** //
 
 
     image_vector[0] = imgMat_1;
     image_vector[1] = imgMat_2;
 
 
-    // cv::Mat concat;
-    // cv::hconcat(imgMat_1, imgMat_2, concat);
-    // cv::resize(concat, concat, cv::Size(concat.cols/6, concat.rows/6));
-    // cv::imshow("Fuck", concat);
-    // cv::waitKey(1);
+    cv::Mat concat;
+    cv::vconcat(imgMat_1, imgMat_2, concat);
+    cv::resize(concat, concat, cv::Size(concat.cols/2, concat.rows/2));
+    cv::imshow("Shiba, Stereo Image da", concat);
+    cv::waitKey(1);
 
     img1->Release();
     img2->Release();

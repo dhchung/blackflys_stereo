@@ -37,7 +37,7 @@ void Camera::set_camera(){
     const unsigned int numCameras = camList.GetSize();
     std::cout<<"Number of cameras detected: "<<numCameras<<std::endl;
 
-    if(numCameras != 2) {
+    if(numCameras != 3) {
         camera_ready = false;
     } else {
         camera_ready = true;
@@ -108,11 +108,11 @@ void Camera::set_camera(){
 
 
 
-        ptrHandlingModeEntry_1 = ptrHandlingMode_1->GetEntryByName("NewestFirst");
+        ptrHandlingModeEntry_1 = ptrHandlingMode_1->GetEntryByName("NewestOnly");
         ptrHandlingMode_1->SetIntValue(ptrHandlingModeEntry_1->GetValue());
         std::cout << "Buffer Handling Mode has been set to " << ptrHandlingModeEntry_1->GetDisplayName() << std::endl;
 
-        ptrHandlingModeEntry_2 = ptrHandlingMode_2->GetEntryByName("NewestFirst");
+        ptrHandlingModeEntry_2 = ptrHandlingMode_2->GetEntryByName("NewestOnly");
         ptrHandlingMode_2->SetIntValue(ptrHandlingModeEntry_2->GetValue());
         std::cout << "Buffer Handling Mode has been set to " << ptrHandlingModeEntry_2->GetDisplayName() << std::endl;
 
@@ -163,9 +163,9 @@ std::vector<cv::Mat> Camera::acquire_image(){
     // I don't know what the f**k is going on, but it doesn't work if i don't do this
     // ******* Meaningless Resize ******* //
     float ratio = 0.5;
-    cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols/ratio, imgMat_1.rows/ratio));
+    // cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols/ratio, imgMat_1.rows/ratio));
     cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols*ratio, imgMat_1.rows*ratio));
-    cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols/ratio, imgMat_2.rows/ratio));
+    // cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols/ratio, imgMat_2.rows/ratio));
     cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols*ratio, imgMat_2.rows*ratio));
     // ********************************** //
 
@@ -173,12 +173,6 @@ std::vector<cv::Mat> Camera::acquire_image(){
     image_vector[0] = imgMat_1;
     image_vector[1] = imgMat_2;
 
-
-    cv::Mat concat;
-    cv::vconcat(imgMat_1, imgMat_2, concat);
-    cv::resize(concat, concat, cv::Size(concat.cols/2, concat.rows/2));
-    cv::imshow("Shiba, Stereo Image da", concat);
-    cv::waitKey(1);
 
     img1->Release();
     img2->Release();

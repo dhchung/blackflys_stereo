@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(blackfly_stereo)
+project(blackfly_stereo_rosmsg)
 
 find_package(catkin REQUIRED COMPONENTS
 	cv_bridge

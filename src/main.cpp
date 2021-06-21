@@ -6,8 +6,6 @@
 
 #include "camera.h"
 
-#include <chrono>
-
 int main(int argc, char ** argv) {
     Camera cam;
     ros::init(argc, argv, "send_image");
@@ -23,7 +21,7 @@ int main(int argc, char ** argv) {
     ros::Publisher pub_img1 = nh.advertise<sensor_msgs::Image>("camera1/image", 1);
     ros::Publisher pub_img2 = nh.advertise<sensor_msgs::Image>("camera2/image", 1);
 
-    ros::Rate loop_rate(2000);
+    ros::Rate loop_rate(20);
     int count = 0;
     while(ros::ok()){
     // while(1){
@@ -39,6 +37,13 @@ int main(int argc, char ** argv) {
 
         pub_img1.publish(img1);
         pub_img2.publish(img2);
+
+
+        cv::Mat concat;
+        cv::hconcat(acquired_image[0], acquired_image[1], concat);
+        cv::resize(concat, concat, cv::Size(concat.cols/2, concat.rows/2));
+        cv::imshow("Stereo Image", concat);
+        cv::waitKey(1);
 
 
 

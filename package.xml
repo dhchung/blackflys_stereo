@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>blackfly_stereo</name>
+  <name>blackfly_stereo_rosmsg
+  </name>
   <version>0.0.0</version>
   <description>The blackfly_stereo test</description>
 

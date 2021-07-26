@@ -80,7 +80,7 @@ int main(int argc, char ** argv) {
                 cv::Mat disp_img;
                 acquired_image[0].copyTo(disp_img);
                 cv::resize(disp_img, disp_img, cv::Size(disp_img.cols/2, disp_img.rows/2));
-                cv::imshow("Left image", acquired_image[0]);
+                cv::imshow("Left image", disp_img);
                 cv::waitKey(1);
             }
 

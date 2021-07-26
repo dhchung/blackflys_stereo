@@ -1,9 +1,8 @@
 #include "camera.h"
-
+#include <ros/ros.h>
 
 Camera::Camera(){
     system = Spinnaker::System::GetInstance();
-
     cam_1_serial = "20515474"; // Primary Camera
     cam_2_serial = "21102408"; // Secondary Camera
     camera_ready = false;
@@ -37,12 +36,14 @@ void Camera::set_camera(){
     const unsigned int numCameras = camList.GetSize();
     std::cout<<"Number of cameras detected: "<<numCameras<<std::endl;
 
-    if(numCameras != 3) {
+    cam_1 = camList.GetBySerial(cam_1_serial);
+    cam_2 = camList.GetBySerial(cam_2_serial);
+
+
+    if(!cam_1.IsValid() || !cam_2.IsValid()) {
         camera_ready = false;
     } else {
         camera_ready = true;
-        cam_1 = camList.GetBySerial(cam_1_serial);
-        cam_2 = camList.GetBySerial(cam_2_serial);
 
         cam_1->DeInit();
         cam_2->DeInit();
@@ -77,6 +78,43 @@ void Camera::set_camera(){
         if(cam_2->DecimationHorizontal.GetValue()!= 2){
             cam_2->DecimationHorizontal.SetValue(2);
         }
+
+        Spinnaker::GenApi::CBooleanPtr ptrHandlingAcqFrameRateEnable_1 =  cam_1->GetNodeMap().GetNode("AcquisitionFrameRateEnable");
+        Spinnaker::GenApi::CBooleanPtr ptrHandlingAcqFrameRateEnable_2 =  cam_2->GetNodeMap().GetNode("AcquisitionFrameRateEnable");
+
+        if (!IsAvailable(ptrHandlingAcqFrameRateEnable_1) || !IsWritable(ptrHandlingAcqFrameRateEnable_1))
+        {
+            std::cout << "Camera1 "<< " Unable to enable Acquisition Frame Rate (node retrieval). Aborting..."
+                    << std::endl;
+        }
+        if (!IsAvailable(ptrHandlingAcqFrameRateEnable_2) || !IsWritable(ptrHandlingAcqFrameRateEnable_2))
+        {
+            std::cout << "Camera2 "<< " Unable to enable Acquisition Frame Rate (node retrieval). Aborting..."
+                    << std::endl;
+        }
+
+        // Enable  Acquisition Frame Rate Enable
+        ptrHandlingAcqFrameRateEnable_1->SetValue(true);
+        ptrHandlingAcqFrameRateEnable_2->SetValue(true);
+
+        Spinnaker::GenApi::CFloatPtr ptrFrameRate_1 = cam_1->GetNodeMap().GetNode("AcquisitionFrameRate");
+        Spinnaker::GenApi::CFloatPtr ptrFrameRate_2 = cam_2->GetNodeMap().GetNode("AcquisitionFrameRate");
+        if (!IsAvailable(ptrFrameRate_1) || !IsWritable(ptrFrameRate_1))
+        {
+            std::cout << "Camera 1 Unable to set Acquisition Frame Rate (node retrieval). Aborting..." << std::endl;
+        }
+        if (!IsAvailable(ptrFrameRate_2) || !IsWritable(ptrFrameRate_2))
+        {
+            std::cout << "Camera 2 Unable to set Acquisition Frame Rate (node retrieval). Aborting..." << std::endl;
+        }
+
+
+        // Set 10fps for this example
+        const float frameRate = 10.0f;
+        ptrFrameRate_1->SetValue(frameRate);
+        std::cout << "Camera 1 Frame rate is set to " << frameRate << std::endl;
+        ptrFrameRate_2->SetValue(frameRate);
+        std::cout << "Camera 2 Frame rate is set to " << frameRate << std::endl;
 
         Spinnaker::GenApi::INodeMap& sNodeMap_1 = cam_1->GetTLStreamNodeMap();
         Spinnaker::GenApi::INodeMap& sNodeMap_2 = cam_2->GetTLStreamNodeMap();
@@ -118,23 +156,23 @@ void Camera::set_camera(){
 
         cam_2->BeginAcquisition();
         cam_1->BeginAcquisition();
-
-
-
-
-
-
     }
 }
 
 
-std::vector<cv::Mat> Camera::acquire_image(){
+std::vector<cv::Mat> Camera::acquire_image(double & time, bool & img_ok){
+
+    std::vector<cv::Mat> image_vector;
+    if(!camera_ready){
+        std::cout<<"Camera is not ready"<<std::endl;
+        img_ok = false;
+        return image_vector;
+    }
+    img_ok = true;
 
     Spinnaker::ImagePtr img1 = cam_1->GetNextImage();
     Spinnaker::ImagePtr img2 = cam_2->GetNextImage();
 
-
-    std::vector<cv::Mat> image_vector;
     image_vector.resize(2);
 
     if (img1->IsIncomplete())
@@ -148,6 +186,8 @@ std::vector<cv::Mat> Camera::acquire_image(){
         return image_vector;
     }
 
+    time = ros::Time::now().toSec();
+
     const size_t width_1 = img1->GetWidth();
     const size_t height_1 = img1->GetHeight();
     Spinnaker::ImagePtr convertedImage_1 = img1->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::BILINEAR);
@@ -159,25 +199,30 @@ std::vector<cv::Mat> Camera::acquire_image(){
     Spinnaker::ImagePtr convertedImage_2 = img2->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::BILINEAR);
     cv::Mat imgMat_2 = cv::Mat(cv::Size(width_2, height_2), CV_8UC3, convertedImage_2->GetData());
 
+    // cv::rotate(imgMat_1, imgMat_1, cv::ROTATE_180);
+    // cv::rotate(imgMat_2, imgMat_2, cv::ROTATE_180);
+
+
 
     // I don't know what the f**k is going on, but it doesn't work if i don't do this
     // ******* Meaningless Resize ******* //
     float ratio = 0.5;
-    // cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols/ratio, imgMat_1.rows/ratio));
+    cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols/ratio, imgMat_1.rows/ratio));
     cv::resize(imgMat_1, imgMat_1, cv::Size(imgMat_1.cols*ratio, imgMat_1.rows*ratio));
-    // cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols/ratio, imgMat_2.rows/ratio));
+    cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols/ratio, imgMat_2.rows/ratio));
     cv::resize(imgMat_2, imgMat_2, cv::Size(imgMat_2.cols*ratio, imgMat_2.rows*ratio));
     // ********************************** //
-
 
     image_vector[0] = imgMat_1;
     image_vector[1] = imgMat_2;
 
-
     img1->Release();
     img2->Release();
 
-
-
     return image_vector;
+}
+
+void Camera::show_image(cv::Mat & img){
+    imshow("asdf", img);
+    cv::waitKey(1);
 }

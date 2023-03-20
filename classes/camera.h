@@ -1,5 +1,6 @@
 #include "Spinnaker.h"
 #include "SpinGenApi/SpinnakerGenApi.h"
+#include "ImageProcessor.h"
 #include <string>
 #include <opencv2/opencv.hpp>
 #include <vector>

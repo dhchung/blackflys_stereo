@@ -145,7 +145,6 @@ void Camera::set_camera(){
         }
 
 
-
         ptrHandlingModeEntry_1 = ptrHandlingMode_1->GetEntryByName("NewestOnly");
         ptrHandlingMode_1->SetIntValue(ptrHandlingModeEntry_1->GetValue());
         std::cout << "Buffer Handling Mode has been set to " << ptrHandlingModeEntry_1->GetDisplayName() << std::endl;
@@ -173,6 +172,7 @@ std::vector<cv::Mat> Camera::acquire_image(double & time, bool & img_ok){
     Spinnaker::ImagePtr img1 = cam_1->GetNextImage();
     Spinnaker::ImagePtr img2 = cam_2->GetNextImage();
 
+
     image_vector.resize(2);
 
     if (img1->IsIncomplete())
@@ -190,13 +190,16 @@ std::vector<cv::Mat> Camera::acquire_image(double & time, bool & img_ok){
 
     const size_t width_1 = img1->GetWidth();
     const size_t height_1 = img1->GetHeight();
-    Spinnaker::ImagePtr convertedImage_1 = img1->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::BILINEAR);
+
+    Spinnaker::ImageProcessor imgproc;
+
+    Spinnaker::ImagePtr convertedImage_1 = imgproc.Convert(img1, Spinnaker::PixelFormat_BGR8);
     cv::Mat imgMat_1 = cv::Mat(cv::Size(width_1, height_1), CV_8UC3, convertedImage_1->GetData());
 
 
     const size_t width_2 = img2->GetWidth();
     const size_t height_2 = img2->GetHeight();
-    Spinnaker::ImagePtr convertedImage_2 = img2->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::BILINEAR);
+    Spinnaker::ImagePtr convertedImage_2 = imgproc.Convert(img2, Spinnaker::PixelFormat_BGR8);
     cv::Mat imgMat_2 = cv::Mat(cv::Size(width_2, height_2), CV_8UC3, convertedImage_2->GetData());
 
     // cv::rotate(imgMat_1, imgMat_1, cv::ROTATE_180);

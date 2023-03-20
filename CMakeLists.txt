@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 )
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -O3 -Wall -g ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++14 -O3 -Wall -g ${CMAKE_CXX_FLAGS}")
 
 find_package(OpenCV REQUIRED)
 
@@ -20,21 +20,17 @@ catkin_package()
 file(GLOB CLASS_SOURCES
     "classes/*")
 
-if(EXISTS "/opt/spinnaker")
-	include_directories(
-		/opt/spinnaker/include
-		classes/
-		${catkin_INCLUDE_DIRS}
-		${OpenCV_INCLUDE_DIRS}
-	)
-	add_executable(send_image 
-				   src/main.cpp
-				   ${CLASS_SOURCES})
+include_directories(
+	/opt/spinnaker/include
+	classes/
+	${catkin_INCLUDE_DIRS}
+	${OpenCV_INCLUDE_DIRS}
+)
+add_executable(send_image 
+				src/main.cpp
+				${CLASS_SOURCES})
 
-	target_link_libraries(send_image
-                          ${catkin_LIBRARIES} 
-                          ${SPINNAKER_LIBRARIES} 
-                          ${OpenCV_LIBRARIES})
-else()
-	message("Shiba, Spinnaker is not installed")
-endif()
+target_link_libraries(send_image
+						${catkin_LIBRARIES} 
+						${SPINNAKER_LIBRARIES} 
+						${OpenCV_LIBRARIES})

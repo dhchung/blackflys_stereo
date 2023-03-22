@@ -67,7 +67,11 @@ int main(int argc, char ** argv) {
 
             // pub_img1.publish(img1);
             // pub_img2.publish(img2);
-            sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", acquired_image[0]).toImageMsg();
+
+            cv::Mat concat;
+            cv::hconcat(acquired_image[0], acquired_image[1], concat);
+
+            sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", concat).toImageMsg();
             pub.publish(msg);
 
             // cv::Mat concat;
